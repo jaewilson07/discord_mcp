@@ -25,6 +25,12 @@ A Model Context Protocol (MCP) server that provides Discord integration capabili
 ### Channel Management
 - `create_text_channel`: Create a new text channel
 - `delete_channel`: Delete an existing channel
+- `create_category`: Create a new category channel
+- `move_channel`: Move a channel to a different category or remove it from a category
+
+### Event Management
+- `create_scheduled_event`: Create a scheduled event for a server (supports external, voice, and stage events)
+- `edit_scheduled_event`: Edit an existing scheduled event (update name, description, times, location, channel, or status)
 
 ### Role Management
 - `add_role`: Add a role to a user

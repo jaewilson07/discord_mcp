@@ -1,2 +1,5 @@
 discord.py>=2.3.0
 mcp>=0.1.0
+agency-swarm[fastapi]>=1.2.1
+fastapi
+uvicorn
