@@ -3,3 +3,9 @@ mcp>=0.1.0
 agency-swarm[fastapi]>=1.2.1
 fastapi
 uvicorn
+youtube-transcript-api
+google-api-python-client
+langchain
+langchain-openai
+langchain-text-splitters
+crawl4ai>=0.3.74
