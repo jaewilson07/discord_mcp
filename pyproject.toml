@@ -1,7 +1,7 @@
 [project]
 name = "mcp-discord"
 version = "0.1.0"
-description = "Discord integration for Model Context Protocol"
+description = "Discord integration for Model Context Protocol with multi-agent research capabilities"
 authors = [
     {name = "Hanweg Altimer", email = "hanwegaltimer@outlook.com"},
 ]
@@ -13,9 +13,26 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}
 
+[project.optional-dependencies]
+agency = [
+    "agency-swarm[fastapi]>=0.7.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+]
+youtube = [
+    "youtube-transcript-api>=0.6.1",
+    "google-api-python-client>=2.100.0",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-text-splitters>=0.0.1",
+]
+all = [
+    "mcp-discord[agency,youtube]",
+]
+
 [project.urls]
-Homepage = "https://github.com/hanweg/mcp-discord"
-Repository = "https://github.com/hanweg/mcp-discord.git"
+Homepage = "https://github.com/jaewilson07/discord_mcp"
+Repository = "https://github.com/jaewilson07/discord_mcp.git"
 
 [build-system]
 requires = ["hatchling"]
@@ -25,7 +42,9 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/discord_mcp"]
+packages = ["src/discord_mcp", "src/agency"]
 
 [project.scripts]
-mcp-discord = "discord_mcp:main"
+mcp-discord = "discord_mcp.server:main"
+youtube-research = "agency.youtube_agency:main"
+agency-demo = "agency.agency:main"

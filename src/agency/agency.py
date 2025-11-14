@@ -19,6 +19,12 @@ def create_agency(load_threads_callback=None):
 
     return agency
 
-if __name__ == "__main__":
+
+def main():
+    """Main entry point for running Example Agency in terminal mode."""
     agency = create_agency()
     agency.terminal_demo()
+
+
+if __name__ == "__main__":
+    main()
