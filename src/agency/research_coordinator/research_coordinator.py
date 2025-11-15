@@ -7,5 +7,4 @@ research_coordinator = Agent(
     tools_folder="./tools",
     files_folder="./files",
     model="gpt-4o",
-    max_tokens=25000,
 )

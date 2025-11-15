@@ -26,8 +26,12 @@ youtube = [
     "langchain-openai>=0.0.5",
     "langchain-text-splitters>=0.0.1",
 ]
+mcp-agent = [
+    "mcp-agent[openai]>=0.1.0",
+    "fastmcp>=0.1.0",
+]
 all = [
-    "mcp-discord[agency,youtube]",
+    "mcp-discord[agency,youtube,mcp-agent]",
 ]
 
 [project.urls]
@@ -42,9 +46,11 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/discord_mcp", "src/agency"]
+packages = ["src/discord_mcp", "src/agency", "src/mcp_ce"]
 
 [project.scripts]
 mcp-discord = "discord_mcp.server:main"
+mcp-code-execution = "mcp_ce:main"
+mcp-server-enhanced = "mcp_ce.server_enhanced:mcp.run"
 youtube-research = "agency.youtube_agency:main"
 agency-demo = "agency.agency:main"

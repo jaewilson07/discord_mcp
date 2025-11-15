@@ -1,6 +1,4 @@
 from agency_swarm import Agent
-from openai.types.shared import Reasoning
-
 
 example_agent2 = Agent(
     name="ExampleAgent2",
@@ -9,5 +7,4 @@ example_agent2 = Agent(
     tools_folder="./tools",
     files_folder="./files",
     model="gpt-4o",
-    max_tokens=25000,
 )

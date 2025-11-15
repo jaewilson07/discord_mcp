@@ -9,3 +9,5 @@ langchain
 langchain-openai
 langchain-text-splitters
 crawl4ai>=0.3.74
+httpx
+fastmcp
