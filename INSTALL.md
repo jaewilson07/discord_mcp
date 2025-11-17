@@ -152,9 +152,8 @@ pip list | grep -E "discord|agency|langchain|youtube"
 Test imports:
 
 ```bash
-python -c "import discord_mcp; print('Discord MCP: OK')"
-python -c "import agency; print('Agency: OK')"
-python -c "from agency.youtube_agency import create_agency; print('YouTube Agency: OK')"
+python -c "from src.discord_mcp import server; print('Discord MCP: OK')"
+python -c "from src.mcp_ce import runtime; print('MCP CE: OK')"
 ```
 
 ## Troubleshooting
@@ -171,9 +170,8 @@ pip install -e .
 
 If specific features don't work:
 ```bash
-# Install specific optional dependencies
-pip install -e ".[youtube]"  # For YouTube features
-pip install -e ".[agency]"   # For Agency features
+# Install all dependencies
+pip install -r requirements.txt
 ```
 
 ### API Key Errors

@@ -1,0 +1,2 @@
+# This file ensures the TEMP directory is tracked by git
+# All files in TEMP/ are ignored except this .gitkeep file

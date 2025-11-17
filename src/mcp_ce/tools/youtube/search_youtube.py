@@ -1,20 +1,24 @@
-"""
-YouTube search tool for MCP code execution server.
+"""YouTube search tool for MCP code execution server.
 Searches YouTube for videos matching a topic or keywords.
 """
 
-from googleapiclient.discovery import build
 from datetime import datetime
-import os
-from typing import Dict, Any
+from registry import register_command
+from mcp_ce.cache.cache import cache_tool
+from mcp_ce.tools.model import ToolResponse
+from .models import SearchResults, VideoInfo
+from ._client_helper import get_client
 
 
+@register_command("youtube", "search_youtube")
+@cache_tool(ttl=300, id_param="query")  # Cache for 5 minutes
 async def search_youtube(
     query: str,
     max_results: int = 5,
     order_by: str = "relevance",
     published_after: str = None,
-) -> Dict[str, Any]:
+    override_cache: bool = False,
+) -> ToolResponse:
     """
     Searches YouTube for videos matching a topic or keywords.
 
@@ -23,35 +27,36 @@ async def search_youtube(
         max_results: Number of videos to return (1-50)
         order_by: Sort order: 'relevance', 'date', 'viewCount', or 'rating'
         published_after: ISO date string to filter videos published after this date (e.g., '2024-01-01T00:00:00Z')
+        override_cache: Whether to bypass cache and force fresh search (default: False)
 
     Returns:
-        dict with:
-            - success: bool
-            - videos: list of video metadata
-            - count: number of results
-            - error: error message (if failed)
+        ToolResponse with SearchResults dataclass containing:
+        - query: Original search query
+        - videos: List of VideoInfo dataclasses
+        - count: Number of results returned
+        - message: Optional message (e.g., "No videos found")
     """
-    api_key = os.getenv("YOUTUBE_API_KEY")
-    if not api_key:
-        return {
-            "success": False,
-            "error": "YOUTUBE_API_KEY not found in environment variables",
-        }
-
     if not query.strip():
-        return {"success": False, "error": "Search query cannot be empty"}
+        return ToolResponse(
+            is_success=False, result=None, error="Search query cannot be empty"
+        )
 
     if order_by not in ["relevance", "date", "viewCount", "rating"]:
-        return {
-            "success": False,
-            "error": f"Invalid order_by value. Must be one of: relevance, date, viewCount, rating",
-        }
+        return ToolResponse(
+            is_success=False,
+            result=None,
+            error=f"Invalid order_by value. Must be one of: relevance, date, viewCount, rating",
+        )
 
     if max_results < 1 or max_results > 50:
-        return {"success": False, "error": "max_results must be between 1 and 50"}
+        return ToolResponse(
+            is_success=False,
+            result=None,
+            error="max_results must be between 1 and 50",
+        )
 
     try:
-        youtube = build("youtube", "v3", developerKey=api_key)
+        youtube = get_client()
 
         search_params = {
             "part": "snippet",
@@ -66,10 +71,11 @@ async def search_youtube(
                 datetime.fromisoformat(published_after.replace("Z", "+00:00"))
                 search_params["publishedAfter"] = published_after
             except ValueError:
-                return {
-                    "success": False,
-                    "error": f"Invalid date format for published_after. Use ISO format like '2024-01-01T00:00:00Z'",
-                }
+                return ToolResponse(
+                    is_success=False,
+                    result=None,
+                    error=f"Invalid date format for published_after. Use ISO format like '2024-01-01T00:00:00Z'",
+                )
 
         request = youtube.search().list(**search_params)
         response = request.execute()
@@ -79,28 +85,32 @@ async def search_youtube(
             video_id = item["id"]["videoId"]
             snippet = item["snippet"]
 
-            video_data = {
-                "id": video_id,
-                "title": snippet["title"],
-                "description": snippet["description"],
-                "url": f"https://www.youtube.com/watch?v={video_id}",
-                "channel": snippet["channelTitle"],
-                "published_at": snippet["publishedAt"],
-            }
-            videos.append(video_data)
+            video_info = VideoInfo(
+                video_id=video_id,
+                title=snippet["title"],
+                description=snippet["description"],
+                url=f"https://www.youtube.com/watch?v={video_id}",
+                channel_title=snippet["channelTitle"],
+                published_at=snippet["publishedAt"],
+            )
+            videos.append(video_info)
 
-        if not videos:
-            return {
-                "success": True,
-                "videos": [],
-                "count": 0,
-                "message": f"No videos found for query: {query}",
-            }
+        result = SearchResults(
+            query=query,
+            videos=videos,
+            count=len(videos),
+            message=f"No videos found for query: {query}" if not videos else "",
+        )
 
-        return {"success": True, "videos": videos, "count": len(videos), "query": query}
+        return ToolResponse(is_success=True, result=result)
 
+    except RuntimeError as e:
+        # API key error from get_client()
+        return ToolResponse(is_success=False, result=None, error=str(e))
     except Exception as e:
-        return {"success": False, "error": f"Error searching YouTube: {str(e)}"}
+        return ToolResponse(
+            is_success=False, result=None, error=f"Error searching YouTube: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

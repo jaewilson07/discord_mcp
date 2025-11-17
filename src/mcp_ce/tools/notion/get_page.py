@@ -1,91 +1,85 @@
-"""
-Retrieve full details of a Notion page by its ID.
-"""
+"""Retrieve full details of a Notion page by its ID."""
 
-import os
-from typing import Dict, Any
-from notion_mcp import NotionMCPClient
+from registry import register_command
+from mcp_ce.cache.cache import cache_tool
+from mcp_ce.tools.model import ToolResponse
+from .models import NotionPageContent
+from ._client_helper import get_client
 
 
-async def get_notion_page(page_id: str) -> Dict[str, Any]:
+@register_command("notion", "get_notion_page")
+@cache_tool(ttl=300, id_param="page_id")  # Cache for 5 minutes
+async def get_notion_page(page_id: str, override_cache: bool = False) -> ToolResponse:
     """
     Retrieve full details of a Notion page by its ID.
-    
+
     Args:
         page_id: The ID of the Notion page to retrieve (with or without dashes)
-    
+        override_cache: Whether to bypass cache and force fresh fetch (default: False)
+
     Returns:
-        Dict containing:
-        - success: bool indicating if retrieval succeeded
-        - page: dict with page details including id, created_time, last_edited_time,
-                url, archived status, properties, and parent info
-        - error: error message if retrieval failed
+        ToolResponse with NotionPageContent dataclass containing:
+        - page_id: Page ID
+        - url: Page URL
+        - title: Page title
+        - created_time: Creation time
+        - last_edited_time: Last edit time
+        - properties: Page properties dict
+        - content: Page content blocks list
     """
-    # Get Notion token from environment
-    notion_token = os.getenv("NOTION_TOKEN")
-    if not notion_token:
-        return {
-            "success": False,
-            "page": None,
-            "error": "NOTION_TOKEN environment variable not set."
-        }
-    
     try:
-        async with NotionMCPClient(notion_token) as client:
-            page = await client.get_page(page_id)
-            
-            # Extract and format page details
-            properties = {}
-            if "properties" in page:
-                for prop_name, prop_value in page["properties"].items():
-                    properties[prop_name] = {
-                        "type": prop_value.get("type", "unknown"),
-                        "value": prop_value
-                    }
-            
-            # Format parent info
-            parent_info = None
-            if "parent" in page:
-                parent = page["parent"]
-                parent_info = {
-                    "type": parent.get("type", "unknown"),
-                    "database_id": parent.get("database_id"),
-                    "page_id": parent.get("page_id")
+        client = get_client()  # Returns notion_client.AsyncClient
+        page = await client.pages.retrieve(page_id=page_id)
+
+        # Extract and format page details
+        properties = {}
+        if "properties" in page:
+            for prop_name, prop_value in page["properties"].items():
+                properties[prop_name] = {
+                    "type": prop_value.get("type", "unknown"),
+                    "value": prop_value,
                 }
-            
-            return {
-                "success": True,
-                "page": {
-                    "id": page.get("id"),
-                    "created_time": page.get("created_time"),
-                    "last_edited_time": page.get("last_edited_time"),
-                    "url": page.get("url"),
-                    "archived": page.get("archived", False),
-                    "properties": properties,
-                    "parent": parent_info
-                },
-                "error": None
-            }
-    
+
+        # Extract title from properties
+        title = "Untitled"
+        for prop_name, prop_data in properties.items():
+            if prop_data["type"] == "title" and prop_data["value"].get("title"):
+                title_blocks = prop_data["value"]["title"]
+                if title_blocks:
+                    title = title_blocks[0]["text"]["content"]
+                    break
+
+        result = NotionPageContent(
+            page_id=page.get("id", ""),
+            url=page.get("url", ""),
+            title=title,
+            created_time=page.get("created_time", ""),
+            last_edited_time=page.get("last_edited_time", ""),
+            properties=properties,
+            content=[],  # Can be extended to fetch blocks if needed
+        )
+
+        return ToolResponse(is_success=True, result=result)
+    except RuntimeError as e:
+        return ToolResponse(is_success=False, result=None, error=str(e))
+
     except Exception as e:
-        return {
-            "success": False,
-            "page": None,
-            "error": f"Error retrieving page: {str(e)}"
-        }
+        return ToolResponse(
+            is_success=False, result=None, error=f"Error retrieving page: {str(e)}"
+        )
 
 
 # Test code
 if __name__ == "__main__":
     import asyncio
     import sys
-    
+
     async def test():
         if len(sys.argv) > 1:
             result = await get_notion_page(sys.argv[1])
             print(f"Success: {result['success']}")
-            if result['success']:
-                page = result['page']
+            if result["success"]:
+                page = result["page"]
                 print(f"ID: {page['id']}")
                 print(f"URL: {page['url']}")
                 print(f"Created: {page['created_time']}")
@@ -95,5 +89,5 @@ if __name__ == "__main__":
                 print(f"Error: {result['error']}")
         else:
             print("Usage: python get_page.py <page_id>")
-    
+
     asyncio.run(test())

@@ -6,32 +6,28 @@ authors = [
     {name = "Hanweg Altimer", email = "hanwegaltimer@outlook.com"},
 ]
 dependencies = [
-    "discord.py>=2.3.0",
-    "mcp>=0.1.0",
+    "mcp",
+    "mcp-agent",
+    "fastapi",
+    "fastmcp",
+    "mcp-agent[openai]",
+    "discord.py",
+    "langchain",
+    "langchain-openai",
+    "langchain-text-splitters",
+    "google-api-python-client",
+    "youtube-transcript-api",
+    "audioop-lts",
+    "notion-client"
+
 ]
 requires-python = ">=3.10"
 readme = "README.md"
 license = {file = "LICENSE"}
 
 [project.optional-dependencies]
-agency = [
-    "agency-swarm[fastapi]>=0.7.0",
-    "fastapi>=0.104.0",
-    "uvicorn>=0.24.0",
-]
-youtube = [
-    "youtube-transcript-api>=0.6.1",
-    "google-api-python-client>=2.100.0",
-    "langchain>=0.1.0",
-    "langchain-openai>=0.0.5",
-    "langchain-text-splitters>=0.0.1",
-]
-mcp-agent = [
-    "mcp-agent[openai]>=0.1.0",
-    "fastmcp>=0.1.0",
-]
-all = [
-    "mcp-discord[agency,youtube,mcp-agent]",
+dev = [
+    "uvicorn"
 ]
 
 [project.urls]
@@ -50,7 +46,8 @@ packages = ["src/discord_mcp", "src/agency", "src/mcp_ce"]
 
 [project.scripts]
 mcp-discord = "discord_mcp.server:main"
-mcp-code-execution = "mcp_ce:main"
+mcp-code-execution = "mcp_ce.server:mcp.run"
 mcp-server-enhanced = "mcp_ce.server_enhanced:mcp.run"
+mcp-discord-integrated = "mcp_ce.server_with_discord:mcp.run"
 youtube-research = "agency.youtube_agency:main"
 agency-demo = "agency.agency:main"

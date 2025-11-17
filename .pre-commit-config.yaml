@@ -1,0 +1,77 @@
+# Pre-commit configuration optimized to minimize virtualenv/setuptools errors
+# Uses system language where possible to avoid creating isolated environments
+
+# Global configuration
+# fail_fast: false
+# default_language_version:
+#     python: python3.11
+
+repos:
+    # General hooks
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v6.0.0
+      hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+          - id: check-yaml
+          - id: check-toml
+          - id: check-merge-conflict
+          - id: check-added-large-files
+
+    # Python formatting - using ruff-format (faster, black-compatible)
+    # Black removed to avoid conflicts with ruff-format
+
+    # Import sorting
+    - repo: https://github.com/pycqa/isort
+      rev: 7.0.0
+      hooks:
+          - id: isort
+            args: ["--profile", "black"]
+            files: ^src/
+
+    # Linting
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.6.9
+      hooks:
+          - id: ruff
+            args: [--fix]
+            files: ^src/
+          - id: ruff-format
+            files: ^src/
+
+    # Security scanning - use local system installation
+    - repo: local
+      hooks:
+          - id: bandit
+            name: bandit
+            entry: python -m bandit
+            language: system
+            types: [python]
+            args: ["-c", "pyproject.toml", "-ll"]
+            files: ^src/
+            fail_fast: false
+
+    # # Type checking
+    # - repo: https://github.com/pre-commit/mirrors-mypy
+    #   rev: v1.11.2
+    #   hooks:
+    #       - id: mypy
+    #         additional_dependencies: [types-requests]
+    #         args:
+    #             [
+    #                 --ignore-missing-imports,
+    #                 --namespace-packages,
+    #                 --explicit-package-bases,
+    #             ]
+    #         files: ^src/
+
+    # Testing (commented out due to import issues)
+    # - repo: local
+    #   hooks:
+    #     - id: pytest
+    #       name: pytest
+    #       entry: python -m pytest
+    #       language: system
+    #       pass_filenames: false
+    #       args: [tests/]
+    #       stages: [pre-push]
