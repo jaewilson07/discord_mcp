@@ -981,7 +981,7 @@ uv run run.py
 pytest
 
 # Run specific test file
-pytest tests/test_discord_tools.py
+pytest TESTS/mcp_ce/tools/discord/test_discord_tools.py
 
 # Run with coverage
 pytest --cov=src --cov-report=html

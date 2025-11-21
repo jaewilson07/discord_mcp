@@ -17,8 +17,10 @@ dependencies = [
     "langchain-text-splitters",
     "google-api-python-client",
     "youtube-transcript-api",
-    "audioop-lts",
-    "notion-client"
+    "notion-client",
+    # audioop-lts is only needed on Python 3.13+ where the stdlib audioop module was removed
+    # See README: it's optional and should not block installs on Python 3.10–3.12
+    "audioop-lts; python_version >= '3.13'"
 
 ]
 requires-python = ">=3.10"
@@ -42,12 +44,8 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/discord_mcp", "src/agency", "src/mcp_ce"]
+packages = ["src/discord_mcp", "src/mcp_ce"]
 
 [project.scripts]
 mcp-discord = "discord_mcp.server:main"
-mcp-code-execution = "mcp_ce.server:mcp.run"
-mcp-server-enhanced = "mcp_ce.server_enhanced:mcp.run"
-mcp-discord-integrated = "mcp_ce.server_with_discord:mcp.run"
-youtube-research = "agency.youtube_agency:main"
-agency-demo = "agency.agency:main"
+mcp-code-execution = "mcp_ce:main"

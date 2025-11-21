@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "mcp-discord": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "D:\\GitHub\\mcp-discord",
+        "run",
+        "mcp-discord"
+      ],
+      "env": {
+        "DISCORD_TOKEN": "your_discord_bot_token_here"
+      }
+    },
+    "linear": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@linear-app/mcp-server"
+      ],
+      "env": {
+        "LINEAR_API_KEY": "your_linear_api_key_here"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@context7/mcp-server"
+      ],
+      "env": {
+        "CONTEXT7_API_KEY": "your_context7_api_key_here"
+      }
+    }
+  }
+}
+

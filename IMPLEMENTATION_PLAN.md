@@ -25,7 +25,7 @@ This plan outlines the implementation of the updated MCP CE architecture based o
 **Files to Create:**
 - `src/mcp_ce/cache.py` - Cache decorator implementation
 - `src/mcp_ce/cache_manager.py` - Cache management utilities
-- `tests/test_cache.py` - Cache tests
+- `TESTS/test_cache.py` - Cache tests
 
 **Tasks:**
 1. ✅ Copy implementation from `CACHE_WRAPPER_DESIGN.md`
@@ -40,7 +40,7 @@ This plan outlines the implementation of the updated MCP CE architecture based o
 **Validation:**
 ```bash
 # Run cache tests
-pytest tests/test_cache.py -v
+pytest TESTS/test_cache.py -v
 
 # Verify .gitignore updated
 git check-ignore .cache/
@@ -1057,10 +1057,10 @@ grep -r "three locations" .github/
 - ✅ Individual tools: 80%+ coverage
 
 **Test Files:**
-- `tests/test_cache.py` - Cache decorator tests
-- `tests/test_registry.py` - Registry decorator tests
-- `tests/test_runtime.py` - Runtime discovery tests
-- `tests/test_tools_*.py` - Per-server tool tests
+- `TESTS/test_cache.py` - Cache decorator tests
+- `TESTS/test_registry.py` - Registry decorator tests
+- `TESTS/test_runtime.py` - Runtime discovery tests
+- `TESTS/test_tools_*.py` - Per-server tool tests
 
 ### Integration Tests
 

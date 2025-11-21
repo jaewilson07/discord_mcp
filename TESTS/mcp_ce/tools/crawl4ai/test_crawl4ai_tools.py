@@ -161,10 +161,52 @@ async def test_deep_crawl_depth3():
     return response
 
 
+async def test_seattle_blues_dance():
+    """Test crawling Seattle Blues Dance website."""
+    print("\n" + "=" * 70)
+    print("Test Category 5: Seattle Blues Dance")
+    print("=" * 70)
+
+    response = await crawl_website(
+        url="https://seattlebluesdance.com/",
+        extract_images=True,
+        extract_links=True,
+        override_cache=True,  # Force fresh crawl for testing
+    )
+
+    print(f"✅ Success: {response.is_success}")
+    if response.is_success:
+        result = response.result
+        print(f"📄 Title: {result['title']}")
+        print(
+            f"📝 Description: {result['description'][:100]}..."
+            if result["description"]
+            else "📝 Description: N/A"
+        )
+        print(f"📏 Content length: {result['content_length']} chars")
+        print(f"🖼️  Images: {len(result.get('images', []))}")
+        print(f"🔗 Internal links: {len(result.get('links', {}).get('internal', []))}")
+
+        # Show content preview
+        if result["content_markdown"]:
+            print(f"\n📄 Content Preview (first 500 chars):")
+            print(result["content_markdown"][:500] + "...")
+
+        assert result["content_length"] > 0, "No content extracted"
+        assert result["title"], "No title extracted"
+    else:
+        print(f"❌ Error: {response.error}")
+        print(f"📦 Result: {response.result}")
+        # Don't fail the test - we want to see the diagnostic info
+        print("\n💡 Diagnostic info captured for troubleshooting")
+
+    return response
+
+
 async def test_content_quality():
     """Test content extraction quality."""
     print("\n" + "=" * 70)
-    print("Test Category 5: Content Quality Validation")
+    print("Test Category 6: Content Quality Validation")
     print("=" * 70)
 
     response = await crawl_website(
@@ -212,6 +254,7 @@ async def run_all_tests():
         ("Specific Page Crawl", test_specific_page_crawl),
         ("Deep Crawl (Depth 2)", test_deep_crawl_depth2),
         ("Deep Crawl (Depth 3)", test_deep_crawl_depth3),
+        ("Seattle Blues Dance", test_seattle_blues_dance),
         ("Content Quality", test_content_quality),
     ]
 

@@ -59,15 +59,58 @@ def create_discord_bot() -> commands.Bot:
     
     bot = commands.Bot(command_prefix="!", intents=intents)
     
+    # Set up bot handlers (@mentions and slash commands) before bot starts
+    # This ensures commands are registered before syncing
+    from src.mcp_ce.tools.discord.bot_handlers import setup_bot_handlers
+    setup_bot_handlers(bot)
+    logger.info("Bot handlers registered")
+    
+    @bot.event
+    async def setup_hook():
+        """
+        Setup hook called before on_ready().
+        This is the recommended place to sync commands per discord.py docs.
+        """
+        # Register bot with mcp_ce tools
+        from src.mcp_ce.tools.discord._bot_helper import set_bot
+        set_bot(bot)
+        logger.info("Bot registered with MCP CE runtime")
+    
     @bot.event
     async def on_ready():
         logger.info(f"Discord bot logged in as {bot.user.name}")
         logger.info(f"Bot is in {len(bot.guilds)} server(s)")
         
-        # Register bot with mcp_ce tools
-        from src.mcp_ce.tools.discord._bot_helper import set_bot
-        set_bot(bot)
-        logger.info("Bot registered with MCP CE runtime")
+        # List registered commands
+        commands_list = [cmd.name for cmd in bot.tree.get_commands()]
+        logger.info(f"Registered commands: {commands_list}")
+        
+        # Sync slash commands
+        # Option 1: Sync to specific guild for faster testing (instant)
+        GUILD_ID = os.getenv("DISCORD_GUILD_ID")
+        if GUILD_ID:
+            try:
+                guild = discord.Object(id=int(GUILD_ID))
+                synced = await bot.tree.sync(guild=guild)
+                logger.info(f"✅ Synced {len(synced)} slash command(s) to guild {GUILD_ID} (instant)")
+                for cmd in synced:
+                    logger.info(f"   - {cmd.name} (ID: {cmd.id})")
+            except Exception as e:
+                logger.error(f"❌ Failed to sync commands to guild: {e}", exc_info=True)
+        else:
+            # Option 2: Sync globally (can take up to 1 hour to appear)
+            try:
+                synced = await bot.tree.sync()
+                logger.info(f"✅ Synced {len(synced)} slash command(s) globally")
+                logger.info("⚠️  Note: Global commands can take up to 1 hour to appear in Discord")
+                logger.info("💡 Tip: For faster testing, set DISCORD_GUILD_ID in .env")
+                for cmd in synced:
+                    logger.info(f"   - {cmd.name} (ID: {cmd.id})")
+            except discord.errors.Forbidden as e:
+                logger.error(f"❌ Permission denied: Make sure bot has 'applications.commands' scope")
+                logger.error(f"   Error: {e}")
+            except Exception as e:
+                logger.error(f"❌ Failed to sync commands globally: {e}", exc_info=True)
     
     return bot
 

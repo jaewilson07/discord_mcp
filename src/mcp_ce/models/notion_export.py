@@ -1,3 +1,13 @@
+from typing import Any, Dict, Optional
+from pydantic import BaseModel, Field
+
+# Forward reference for VideoAnalysisReport to avoid circular import
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .youtube import VideoAnalysisReport
+
+
 class NotionPageProperties(BaseModel):
     """Properties for a Notion page"""
 
@@ -57,7 +67,7 @@ class NotionExportRequest(BaseModel):
     max_key_points: int
 
     @classmethod
-    def from_report(cls, report: VideoAnalysisReport) -> "NotionExportRequest":
+    def from_report(cls, report: "VideoAnalysisReport") -> "NotionExportRequest":
         """Create from VideoAnalysisReport"""
         metadata_text = f"""**Title**: {report.metadata.title}
 **Channel**: {report.metadata.channel}

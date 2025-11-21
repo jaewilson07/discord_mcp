@@ -1,5 +1,4 @@
----
-applyTo: "src/**/*agent*.py"
+applyTo: "src/mcp_ce/agentic_tools/graphs/**/*.py"
 excludeAgent: ["code-review"]
 ---
 

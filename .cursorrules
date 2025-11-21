@@ -1,0 +1,200 @@
+# Cursor Rules for Proactive MCP Tool Usage
+
+## Core Principle
+
+Always proactively use available MCP tools when they can help with the current task. Don't wait for explicit requests - if a tool is relevant, use it automatically.
+
+## Available MCP Tools
+
+### Discord Tools (via mcp-discord)
+
+- **When to use**: Any task involving Discord servers, channels, messages, events, or roles
+- **Proactive triggers**:
+  - User mentions Discord, server, channel, message, event, role
+  - Code references Discord API or discord.py
+  - User asks about server management, moderation, or automation
+  - Creating scheduled events or managing Discord communities
+
+### Linear Tools (via linear MCP server)
+
+- **When to use**: Any task involving project management, issue tracking, or task organization
+- **Proactive triggers**:
+  - User mentions bug, issue, feature, task, todo
+  - Code contains TODO, FIXME, BUG comments
+  - User asks about project status or planning
+  - Creating or updating issues related to code changes
+  - Linking code changes to Linear issues automatically
+
+### Context7 Tools (via context7 MCP server)
+
+- **When to use**: Any task requiring documentation, examples, or library information
+- **Proactive triggers**:
+  - User asks "how do I...", "show me...", "what is...", "examples of..."
+  - Code uses unfamiliar libraries or APIs
+  - User requests documentation or examples
+  - Implementing features using new libraries
+  - Debugging issues with third-party libraries
+
+### Notion Tools (via mcp-code-execution → notion)
+
+- **When to use**: Any task involving documentation, knowledge base, or project notes
+- **Proactive triggers**:
+  - User mentions documentation, notes, wiki, knowledge base
+  - Creating or updating project documentation
+  - Storing code examples or patterns
+  - Organizing project information
+
+### YouTube Tools (via mcp-code-execution → youtube)
+
+- **When to use**: Research, learning, or finding video content
+- **Proactive triggers**:
+  - User asks about tutorials, videos, or learning resources
+  - Researching topics or technologies
+  - Finding examples or demonstrations
+
+### Web Scraping Tools (via mcp-code-execution → crawl4ai)
+
+- **When to use**: Extracting information from websites or web research
+- **Proactive triggers**:
+  - User mentions website, scraping, crawling, extracting
+  - Need to gather information from web sources
+  - Researching competitors or similar projects
+
+## Automatic Workflow Patterns
+
+### 1. Code Review → Linear Issue Creation
+
+When reviewing code and finding bugs or issues:
+
+1. Automatically check if a Linear issue exists for this problem
+2. If not, create a Linear issue with:
+   - Bug description from code context
+   - File and line references
+   - Suggested fix approach
+   - Link to the code location
+
+### 2. Implementation → Documentation Lookup
+
+When implementing features:
+
+1. Automatically fetch Context7 docs for libraries being used
+2. Search for examples and best practices
+3. Reference documentation in code comments
+4. Update Notion docs with implementation details
+
+### 3. Bug Fix → Discord Notification
+
+When fixing critical bugs:
+
+1. Check if Discord server has relevant channels
+2. Optionally notify team via Discord (if configured)
+3. Create or update Linear issue
+4. Document fix in Notion
+
+### 4. Feature Development → Full Workflow
+
+When developing new features:
+
+1. **Planning**: Create Linear issue with feature description
+2. **Research**: Use Context7 to find relevant documentation and examples
+3. **Implementation**: Use web scraping if needed for research
+4. **Documentation**: Update Notion with implementation details
+5. **Communication**: Use Discord to coordinate if needed
+
+### 5. Learning & Research → Multi-Tool
+
+When user asks questions or needs to learn:
+
+1. Use Context7 to get up-to-date documentation
+2. Use YouTube tools to find video tutorials
+3. Use web scraping to gather additional resources
+4. Store findings in Notion for future reference
+
+## Tool Selection Strategy
+
+1. **Always check MCP tools first** before suggesting manual steps
+2. **Use multiple tools in sequence** when they complement each other
+3. **Cache results** - if you've fetched docs/examples, reference them in responses
+4. **Link related information** - connect Linear issues, Notion docs, and code
+
+## Examples of Proactive Usage
+
+### Example 1: User writes "I need to add error handling"
+
+**Automatic actions:**
+
+1. Use Context7 to get error handling best practices for the language/framework
+2. Check Linear for existing issues about error handling
+3. Provide code examples from Context7
+4. Suggest creating a Linear issue to track this improvement
+
+### Example 2: User mentions a bug
+
+**Automatic actions:**
+
+1. Search Linear for existing issues about this bug
+2. If found, link to it and update with current context
+3. If not found, offer to create a Linear issue
+4. Use Context7 to find debugging techniques
+5. Check Discord for related discussions
+
+### Example 3: User asks "How do I use FastMCP?"
+
+**Automatic actions:**
+
+1. Use Context7 to fetch FastMCP documentation
+2. Search for code examples
+3. Check if there are YouTube tutorials
+4. Store useful examples in Notion for future reference
+
+### Example 4: User creates a new feature
+
+**Automatic actions:**
+
+1. Offer to create a Linear issue for tracking
+2. Use Context7 to research best practices
+3. Check for similar implementations in the codebase
+4. Update Notion with feature documentation
+
+## Memory Integration
+
+- **Store in memories**: Tool usage patterns, frequently accessed docs, common Linear issues
+- **Reference memories**: When similar tasks come up, check memories first
+- **Update memories**: When you learn new patterns or find useful resources
+
+## Tool Discovery
+
+When unsure which tool to use:
+
+1. List available MCP tools using `discovered_servers()`
+2. Query tool docs using `query_tool_docs(server, tool)`
+3. Search tools using `search_tool_docs(query)`
+4. Create tool proxies and test them
+
+## Best Practices
+
+1. **Be proactive, not intrusive**: Use tools when helpful, but don't overwhelm
+2. **Explain tool usage**: When using a tool, briefly mention what you're doing
+3. **Handle failures gracefully**: If a tool fails, suggest alternatives
+4. **Combine tools intelligently**: Use multiple tools when they provide complementary information
+5. **Learn from context**: Remember which tools were useful for similar tasks
+
+## Special Instructions
+
+- **For code changes**: Always check if related Linear issues exist
+- **For new libraries**: Always fetch Context7 docs before implementation
+- **For bugs**: Always create or update Linear issues
+- **For research**: Use multiple tools (Context7, YouTube, web scraping)
+- **For documentation**: Store in Notion for team access
+
+## Tool Priority
+
+When multiple tools could help:
+
+1. **Context7** for documentation and examples (fastest, most reliable)
+2. **Linear** for project management and tracking
+3. **Discord** for team communication
+4. **Notion** for knowledge storage
+5. **YouTube/Web scraping** for research
+
+Remember: The goal is to make development smoother by automatically using tools that can help, not to wait for explicit requests.

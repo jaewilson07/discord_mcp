@@ -15,11 +15,13 @@ from .moderate_message import moderate_message
 from .add_role import add_role
 from .remove_role import remove_role
 from .create_text_channel import create_text_channel
+from .upsert_text_channel import upsert_text_channel
 from .delete_channel import delete_channel
 from .create_category import create_category
 from .move_channel import move_channel
 from .create_scheduled_event import create_scheduled_event
 from .edit_scheduled_event import edit_scheduled_event
+from .repost_tumblr import repost_tumblr
 
 # Bot helper functions
 from ._bot_helper import get_bot, set_bot, is_bot_ready
@@ -43,12 +45,15 @@ __all__ = [
     "remove_role",
     # Channels
     "create_text_channel",
+    "upsert_text_channel",
     "delete_channel",
     "create_category",
     "move_channel",
     # Events
     "create_scheduled_event",
     "edit_scheduled_event",
+    # Tumblr reposting
+    "repost_tumblr",
     # Bot helpers
     "get_bot",
     "set_bot",

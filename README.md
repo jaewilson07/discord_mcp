@@ -87,6 +87,16 @@ To install Discord Server for Claude Desktop automatically via [Smithery](https:
 npx -y @smithery/cli install @hanweg/mcp-discord --client claude
 ```
 
+## Mobile Development
+
+Want to continue development from your phone? Check out the [Mobile Development Guide](docs/MOBILE_DEVELOPMENT.md) for options including:
+- GitHub Codespaces (cloud IDE)
+- Mobile Git apps for quick edits
+- Termux for Android development
+- Remote desktop access
+
+Quick start: Enable GitHub Codespaces on this repo and start coding from any device!
+
 ## License
 
 MIT License - see LICENSE file for details.

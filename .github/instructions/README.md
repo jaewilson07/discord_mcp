@@ -5,6 +5,7 @@ This directory contains custom instructions for GitHub Copilot to provide contex
 ## Structure
 
 ### Repository-Wide Instructions
+
 - **`.github/copilot-instructions.md`** - Main instructions for the entire repository
   - Repository overview and architecture
   - Building, running, and testing
@@ -13,6 +14,7 @@ This directory contains custom instructions for GitHub Copilot to provide contex
   - Environment setup with `uv`
 
 ### Path-Specific Instructions
+
 Located in `.github/instructions/`:
 
 - **`mcp-ce-tools.instructions.md`** - Instructions for MCP CE tool development
@@ -21,18 +23,23 @@ Located in `.github/instructions/`:
   - Three-step registration process (registry, schema, execution)
   - Validation checklists
   - Common patterns and examples
-  
 - **`mcp-agent.instructions.md`** - Instructions for MCP-Agent development
-  - **Applies to:** `src/**/*agent*.py`
+  - **Applies to:** `src/mcp_ce/agentic_tools/graphs/**/*.py`
   - **Excluded from:** Code review agent
   - Agent structure with `@app.tool()` decorators
   - Tool patterns (sync vs async)
   - Agent instructions and LLM configuration
   - Integration with FastMCP
+- **`pydantic-ai-agents.instructions.md`** - Instructions for Pydantic-AI agent development
+  - **Applies to:** `src/mcp_ce/agents/**/*.py`, `src/mcp_ce/agentic_tools/agents/**/*.py`
+  - BaseAgent / dependency injection pattern
+  - Workflow specs (mcp-agent–inspired) and WorkOrder models (Archon-inspired)
+  - MCP integration and repo-aware behavior for agents
 
 ## How It Works
 
 GitHub Copilot automatically uses these instructions when:
+
 - **Repository-wide**: Any request in the context of this repository
 - **Path-specific**: Working on files that match the `applyTo` glob patterns
 
@@ -58,11 +65,11 @@ excludeAgent: "code-review"
 ```
 
 **Options:**
+
 - `applyTo` (required): Glob pattern for matching files
   - Single: `"src/tools/**/*.py"`
   - Multiple: `"**/*.ts,**/*.tsx"`
   - All files: `"**"` or `"**/*"`
-  
 - `excludeAgent` (optional): Exclude from specific agents
   - `"code-review"` - Don't use for PR reviews
   - `"coding-agent"` - Don't use for coding agent
@@ -70,6 +77,7 @@ excludeAgent: "code-review"
 ## Verification
 
 Check if custom instructions are being used:
+
 1. Make a Copilot request in VS Code
 2. Expand the References list in the response
 3. Look for `.github/copilot-instructions.md` or `.instructions.md` files
@@ -77,11 +85,13 @@ Check if custom instructions are being used:
 ## Enabling/Disabling
 
 ### VS Code
+
 1. Open Settings (`Ctrl+,` / `Cmd+,`)
 2. Search for "instruction file"
 3. Toggle "Code Generation: Use Instruction Files"
 
 ### Per-Repository on GitHub
+
 1. Go to repository Settings
 2. Navigate to Copilot settings
 3. Toggle custom instructions for code review
@@ -101,6 +111,7 @@ Check if custom instructions are being used:
 ## Maintenance
 
 Update these instructions when:
+
 - Adding new development patterns
 - Changing tool registration process
 - Updating build/test procedures

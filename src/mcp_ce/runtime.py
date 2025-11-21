@@ -51,7 +51,7 @@ _SERVERS_REGISTRY = {
         "name": "crawl4ai",
         "description": "MCP server for web scraping and article extraction",
         "module": "src.mcp_ce.tools.crawl4ai",
-        "tools": ["crawl_website", "save_article"],
+        "tools": ["crawl_website", "save_article", "chunk_markdown", "extract_code_blocks"],
     },
     "discord": {
         "name": "discord",
@@ -72,12 +72,48 @@ _SERVERS_REGISTRY = {
             "add_role",
             "remove_role",
             "create_text_channel",
+            "upsert_text_channel",
             "delete_channel",
             "create_category",
             "move_channel",
             "create_scheduled_event",
             "edit_scheduled_event",
+            "send_message_with_image",
+            "repost_tumblr",
         ],
+    },
+    "supabase": {
+        "name": "supabase",
+        "description": "MCP server for Supabase document storage, retrieval, and search (for crawl4ai scraped content)",
+        "module": "src.mcp_ce.tools.supabase",
+        "tools": [
+            "add_document",
+            "get_document",
+            "search_documents",
+            "get_available_sources",
+            "perform_rag_query",
+            "add_code_example",
+            "search_code_examples",
+            "check_tumblr_post_duplicate",
+            "store_tumblr_post_url",
+        ],
+    },
+    "agents": {
+        "name": "agents",
+        "description": "MCP server for AI agents (scraper, extraction, validation, code summarizer) using Pydantic-AI with Logfire integration",
+        "module": "src.mcp_ce.tools.agents",
+        "tools": [
+            "scraper_agent",
+            "extraction_agent",
+            "validation_agent",
+            "code_summarizer",
+        ],
+    },
+    "tumblr": {
+        "name": "tumblr",
+        "description": "MCP server for Tumblr blog operations (extracting post URLs from feeds)",
+        "module": "src.mcp_ce.tools.tumblr",
+        "tools": ["extract_post_urls"],
     },
 }
 
@@ -1043,7 +1079,7 @@ def query_tool_docs(
             },
             "create_text_channel": {
                 "name": "create_text_channel",
-                "description": "Create a new text channel in a Discord server",
+                "description": "Create a new text channel in a Discord server. Prevents duplicates by checking for existing channels with the same name. If duplicate found, returns existing channel unless force_create_duplicate=True.",
                 "parameters": {
                     "server_id": {
                         "type": "string",
@@ -1061,6 +1097,12 @@ def query_tool_docs(
                         "required": False,
                         "default": None,
                     },
+                    "force_create_duplicate": {
+                        "type": "boolean",
+                        "description": "If True, creates a duplicate even if channel with same name exists. If False (default), returns existing channel if found.",
+                        "required": False,
+                        "default": False,
+                    },
                 },
                 "returns": {
                     "type": "object",
@@ -1068,7 +1110,44 @@ def query_tool_docs(
                         "success": "boolean",
                         "channel_id": "string",
                         "channel_name": "string",
-                        "error": "string (if failed)",
+                        "error": "string (if duplicate found, contains warning message but success=True)",
+                    },
+                },
+            },
+            "upsert_text_channel": {
+                "name": "upsert_text_channel",
+                "description": "Create or return existing text channel in a Discord server. Checks for existing channels first and returns existing channel if found, unless force_create_duplicate=True.",
+                "parameters": {
+                    "server_id": {
+                        "type": "string",
+                        "description": "Discord server ID",
+                        "required": True,
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Channel name",
+                        "required": True,
+                    },
+                    "category_id": {
+                        "type": "string",
+                        "description": "Optional category ID to create channel under",
+                        "required": False,
+                        "default": None,
+                    },
+                    "force_create_duplicate": {
+                        "type": "boolean",
+                        "description": "If True, creates a duplicate even if channel with same name exists. If False (default), returns existing channel if found.",
+                        "required": False,
+                        "default": False,
+                    },
+                },
+                "returns": {
+                    "type": "object",
+                    "properties": {
+                        "success": "boolean",
+                        "channel_id": "string",
+                        "channel_name": "string",
+                        "error": "string (if duplicate found, contains warning message but success=True)",
                     },
                 },
             },
@@ -1261,6 +1340,156 @@ def query_tool_docs(
                     "properties": {
                         "success": "boolean",
                         "event_id": "string",
+                        "error": "string (if failed)",
+                    },
+                },
+            },
+        }
+
+    elif server_name == "supabase":
+        tools_docs = {
+            "add_document": {
+                "name": "add_document",
+                "description": "Add a document to Supabase database (typically from crawl4ai scraping)",
+                "parameters": {
+                    "url": {
+                        "type": "string",
+                        "description": "Source URL of the document",
+                        "required": True,
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Document title",
+                        "required": True,
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Document content (markdown or text)",
+                        "required": True,
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Document description/summary (default: '')",
+                        "required": False,
+                        "default": "",
+                    },
+                    "author": {
+                        "type": "string",
+                        "description": "Document author (default: '')",
+                        "required": False,
+                        "default": "",
+                    },
+                    "published_date": {
+                        "type": "string",
+                        "description": "Publication date in ISO format (default: '')",
+                        "required": False,
+                        "default": "",
+                    },
+                    "keywords": {
+                        "type": "list",
+                        "description": "List of keywords/tags (optional)",
+                        "required": False,
+                        "default": None,
+                    },
+                    "metadata": {
+                        "type": "dict",
+                        "description": "Additional metadata as dictionary (optional)",
+                        "required": False,
+                        "default": None,
+                    },
+                    "table_name": {
+                        "type": "string",
+                        "description": "Name of the Supabase table (default: 'documents')",
+                        "required": False,
+                        "default": "documents",
+                    },
+                },
+                "returns": {
+                    "type": "object",
+                    "properties": {
+                        "success": "boolean",
+                        "result": "Document object with id, url, title, content, metadata",
+                        "error": "string (if failed)",
+                    },
+                },
+            },
+            "get_document": {
+                "name": "get_document",
+                "description": "Retrieve a document from Supabase by its ID",
+                "parameters": {
+                    "document_id": {
+                        "type": "string",
+                        "description": "The UUID of the document to retrieve",
+                        "required": True,
+                    },
+                    "table_name": {
+                        "type": "string",
+                        "description": "Name of the Supabase table (default: 'documents')",
+                        "required": False,
+                        "default": "documents",
+                    },
+                    "override_cache": {
+                        "type": "boolean",
+                        "description": "Whether to bypass cache (default: False)",
+                        "required": False,
+                        "default": False,
+                    },
+                },
+                "returns": {
+                    "type": "object",
+                    "properties": {
+                        "success": "boolean",
+                        "result": "Document object with all fields",
+                        "error": "string (if failed)",
+                    },
+                },
+            },
+            "search_documents": {
+                "name": "search_documents",
+                "description": "Search for documents in Supabase using text search or filters",
+                "parameters": {
+                    "query": {
+                        "type": "string",
+                        "description": "Text search query (searches in title, content, description)",
+                        "required": False,
+                        "default": None,
+                    },
+                    "table_name": {
+                        "type": "string",
+                        "description": "Name of the Supabase table (default: 'documents')",
+                        "required": False,
+                        "default": "documents",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of results (default: 10, max: 100)",
+                        "required": False,
+                        "default": 10,
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "Number of results to skip for pagination (default: 0)",
+                        "required": False,
+                        "default": 0,
+                    },
+                    "filters": {
+                        "type": "dict",
+                        "description": "Optional dictionary of filters (e.g., {'author': 'John Doe'})",
+                        "required": False,
+                        "default": None,
+                    },
+                    "override_cache": {
+                        "type": "boolean",
+                        "description": "Whether to bypass cache (default: False)",
+                        "required": False,
+                        "default": False,
+                    },
+                },
+                "returns": {
+                    "type": "object",
+                    "properties": {
+                        "success": "boolean",
+                        "result": "DocumentSearchResult with list of matching documents",
                         "error": "string (if failed)",
                     },
                 },
@@ -1462,9 +1691,17 @@ async def _execute_tool(server_name: str, tool_name: str, **kwargs) -> Any:
 
             return await crawl_website(**kwargs)
         elif tool_name == "save_article":
-            from .agents.save_article import save_article
+            from .tools.crawl4ai.save_article import save_article
 
             return await save_article(**kwargs)
+        elif tool_name == "chunk_markdown":
+            from .tools.crawl4ai.chunk_markdown import chunk_markdown
+
+            return await chunk_markdown(**kwargs)
+        elif tool_name == "extract_code_blocks":
+            from .tools.crawl4ai.extract_code_blocks import extract_code_blocks_tool
+
+            return await extract_code_blocks_tool(**kwargs)
 
     elif server_name == "discord":
         # Discord tools - wrapper functions that handle bot client internally
@@ -1492,6 +1729,10 @@ async def _execute_tool(server_name: str, tool_name: str, **kwargs) -> Any:
             from .tools.discord.send_message import send_message
 
             return await send_message(**kwargs)
+        elif tool_name == "send_message_with_image":
+            from .tools.discord.send_message_with_image import send_message_with_image
+
+            return await send_message_with_image(**kwargs)
         elif tool_name == "read_messages":
             from .tools.discord.read_messages import read_messages
 
@@ -1524,6 +1765,10 @@ async def _execute_tool(server_name: str, tool_name: str, **kwargs) -> Any:
             from .tools.discord.create_text_channel import create_text_channel
 
             return await create_text_channel(**kwargs)
+        elif tool_name == "upsert_text_channel":
+            from .tools.discord.upsert_text_channel import upsert_text_channel
+
+            return await upsert_text_channel(**kwargs)
         elif tool_name == "delete_channel":
             from .tools.discord.delete_channel import delete_channel
 
@@ -1544,6 +1789,54 @@ async def _execute_tool(server_name: str, tool_name: str, **kwargs) -> Any:
             from .tools.discord.edit_scheduled_event import edit_scheduled_event
 
             return await edit_scheduled_event(**kwargs)
+
+    elif server_name == "supabase":
+        if tool_name == "add_document":
+            from .tools.supabase.add_document import add_document
+
+            return await add_document(**kwargs)
+        elif tool_name == "get_document":
+            from .tools.supabase.get_document import get_document
+
+            return await get_document(**kwargs)
+        elif tool_name == "search_documents":
+            from .tools.supabase.search_documents import search_documents
+
+            return await search_documents(**kwargs)
+        elif tool_name == "get_available_sources":
+            from .tools.supabase.get_available_sources import get_available_sources
+
+            return await get_available_sources(**kwargs)
+        elif tool_name == "perform_rag_query":
+            from .tools.supabase.perform_rag_query import perform_rag_query
+
+            return await perform_rag_query(**kwargs)
+        elif tool_name == "add_code_example":
+            from .tools.supabase.add_code_example import add_code_example
+
+            return await add_code_example(**kwargs)
+        elif tool_name == "search_code_examples":
+            from .tools.supabase.search_code_examples import search_code_examples
+
+            return await search_code_examples(**kwargs)
+
+    elif server_name == "agents":
+        if tool_name == "scraper_agent":
+            from .tools.agents.scraper_agent_tool import scraper_agent_tool
+
+            return await scraper_agent_tool(**kwargs)
+        elif tool_name == "extraction_agent":
+            from .tools.agents.extraction_agent_tool import extraction_agent_tool
+
+            return await extraction_agent_tool(**kwargs)
+        elif tool_name == "validation_agent":
+            from .tools.agents.validation_agent_tool import validation_agent_tool
+
+            return await validation_agent_tool(**kwargs)
+        elif tool_name == "code_summarizer":
+            from .tools.agents.code_summarizer_tool import code_summarizer_tool
+
+            return await code_summarizer_tool(**kwargs)
 
     raise NotImplementedError(f"Tool '{tool_name}' not implemented")
 

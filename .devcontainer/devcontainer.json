@@ -1,0 +1,44 @@
+{
+  "name": "MCP Discord Development",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.cargo/bin/uv sync",
+  
+  "postStartCommand": "echo 'Development environment ready! Run: uv run mcp-discord'",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "github.copilot",
+        "github.copilot-chat"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true
+        }
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "DISCORD_TOKEN": "${localEnv:DISCORD_TOKEN}"
+  },
+
+  "forwardPorts": [],
+
+  "remoteUser": "vscode"
+}
+

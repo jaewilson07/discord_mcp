@@ -1,18 +1,28 @@
 """MCP CE data models."""
 
 from .events import EventDetails
-from .notion_export import NotionExport
-from .youtube import YouTubeVideo, YouTubeTranscript, YouTubeMetadata
+from .notion_export import NotionExportRequest, NotionExportResult
+from .youtube import (
+    VideoMetadata,
+    VideoTranscript,
+    VideoAnalysisSummary,
+    VideoAnalysisReport,
+)
 from .article import Article
+from .tumblr import TumblrPost, TumblrPostList
 from ..tools.crawl4ai.models import CrawlResult, DeepCrawlResult
 
 __all__ = [
     "EventDetails",
-    "NotionExport",
-    "YouTubeVideo",
-    "YouTubeTranscript",
-    "YouTubeMetadata",
+    "NotionExportRequest",
+    "NotionExportResult",
+    "VideoMetadata",
+    "VideoTranscript",
+    "VideoAnalysisSummary",
+    "VideoAnalysisReport",
     "Article",
+    "TumblrPost",
+    "TumblrPostList",
     "CrawlResult",
     "DeepCrawlResult",
 ]

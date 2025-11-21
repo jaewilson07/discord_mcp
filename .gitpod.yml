@@ -1,0 +1,33 @@
+image: gitpod/workspace-python:3.11
+
+tasks:
+  - name: Setup Environment
+    init: |
+      # Install uv
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+      export PATH="$HOME/.cargo/bin:$PATH"
+      
+      # Install dependencies
+      uv sync
+      
+      echo "✅ Environment ready!"
+      echo "📝 Set DISCORD_TOKEN in Gitpod variables (Settings → Variables)"
+      echo "🚀 Run: uv run mcp-discord"
+
+vscode:
+  extensions:
+    - ms-python.python
+    - ms-python.vscode-pylance
+    - ms-python.black-formatter
+    - charliermarsh.ruff
+
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true
+    pullRequestsFromForks: true
+    addCheck: true
+    addComment: false
+    addBadge: true
+

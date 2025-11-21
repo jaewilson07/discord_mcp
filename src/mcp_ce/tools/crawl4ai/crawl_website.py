@@ -4,11 +4,12 @@ This tool extracts raw markdown/HTML content from web pages.
 To convert to structured Article format and save to Notion, use an agent.
 """
 
-from typing import Optional
+from typing import Optional, List
 from registry import register_command
 from mcp_ce.cache.cache import cache_tool
 from mcp_ce.tools.model import ToolResponse
 from mcp_ce.tools.crawl4ai.models import CrawlResult
+from ._helpers import detect_url_type, parse_sitemap, normalize_url
 
 # Suppress Pydantic deprecation warnings from crawl4ai
 import warnings
@@ -39,14 +40,19 @@ async def crawl_website(
     """
     Crawl a website and extract clean markdown content.
 
-    This is an ATOMIC tool that only extracts content. It does NOT save to Notion.
-    To convert to Article and save, use an agent that:
+    This tool automatically detects URL type and handles:
+    - Sitemaps: Parses XML sitemap and returns list of URLs
+    - Text/Markdown files: Directly extracts content
+    - Regular webpages: Uses browser to extract content
+
+    This is an ATOMIC tool that only extracts content. It does NOT save to storage.
+    To save content, use an agent that:
     1. Calls this tool to get markdown
-    2. Creates Article object from the data
-    3. Calls article.to_notion() to save
+    2. Calls chunk_markdown to split into chunks
+    3. Calls add_document to store chunks
 
     Args:
-        url: The URL of the website to crawl
+        url: The URL of the website to crawl (can be sitemap, txt, markdown, or webpage)
         extract_images: Whether to extract image URLs from the page
         extract_links: Whether to extract internal and external links
         word_count_threshold: Minimum word count for content blocks (filters noise)
@@ -60,6 +66,7 @@ async def crawl_website(
     Returns:
         ToolResponse containing:
         - url: the crawled URL
+        - url_type: detected type ('sitemap', 'txt', 'markdown', 'webpage')
         - title: page title from metadata
         - description: page description
         - author: article author (if available)
@@ -69,9 +76,33 @@ async def crawl_website(
         - content_length: character count
         - images: list of extracted images (if requested)
         - links: dict of internal/external links (if requested)
+        - sitemap_urls: list of URLs if url_type is 'sitemap'
         - extracted_at: ISO timestamp of extraction
     """
     try:
+        # Detect URL type
+        url_type = detect_url_type(url)
+        
+        # Handle sitemaps
+        if url_type == 'sitemap':
+            sitemap_urls = parse_sitemap(url)
+            return ToolResponse(
+                is_success=True,
+                result={
+                    'url': url,
+                    'url_type': 'sitemap',
+                    'title': f'Sitemap: {url}',
+                    'description': f'Sitemap containing {len(sitemap_urls)} URLs',
+                    'content_markdown': '',
+                    'content_length': 0,
+                    'sitemap_urls': sitemap_urls,
+                    'sitemap_count': len(sitemap_urls),
+                    'extracted_at': datetime.now().isoformat(),
+                }
+            )
+        
+        # For txt and markdown files, we'll still use the crawler but it should handle them
+        # The crawler can handle direct file URLs
         # Configure the browser
         browser_config = BrowserConfig(
             headless=headless,
@@ -177,8 +208,12 @@ async def crawl_website(
                 images=images_list,
                 links=links_dict,
             )
+            
+            # Add url_type to result (convert to dict and add field)
+            result_dict = crawl_result.__dict__.copy()
+            result_dict['url_type'] = url_type
 
-            return ToolResponse(is_success=True, result=crawl_result)
+            return ToolResponse(is_success=True, result=result_dict)
 
     except Exception as e:
         return ToolResponse(is_success=False, result={"url": url}, error=str(e))

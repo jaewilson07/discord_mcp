@@ -65,13 +65,13 @@ repos:
     #             ]
     #         files: ^src/
 
-    # Testing (commented out due to import issues)
-    # - repo: local
-    #   hooks:
-    #     - id: pytest
-    #       name: pytest
-    #       entry: python -m pytest
-    #       language: system
-    #       pass_filenames: false
-    #       args: [tests/]
-    #       stages: [pre-push]
+    # Testing - runs production test suites on pre-push
+    - repo: local
+      hooks:
+          - id: pytest
+            name: pytest
+            entry: python -m pytest
+            language: system
+            pass_filenames: false
+            args: ["TESTS/", "-v", "--tb=short"]
+            stages: [pre-push]  # Only run on 'git push', not every commit
